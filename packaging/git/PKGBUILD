@@ -1,0 +1,26 @@
+# Maintainer: jotalea <you@example.com>
+# Build from the git remote:
+#   git clone https://github.com/jotalea/jotasrv
+#   cd packaging/git && makepkg -si
+
+pkgname=jotasrv
+pkgver=2.0.0
+pkgrel=1
+pkgdesc="A lightweight file server with directory listing, file operations, upload, and a web UI"
+arch=('x86_64')
+url="https://github.com/jotalea/jotasrv"
+license=('BSD-3-Clause')
+makedepends=('go')
+source=("jotasrv::git+https://github.com/jotalea/jotasrv.git#tag=v${pkgver}")
+sha256sums=('SKIP')
+
+build() {
+	cd "${srcdir}/${pkgname}"
+	CGO_ENABLED=0 go build -ldflags="-s -w" -o jotasrv
+}
+
+package() {
+	cd "${srcdir}/${pkgname}"
+	install -Dm755 jotasrv "${pkgdir}/usr/bin/${pkgname}"
+	install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
