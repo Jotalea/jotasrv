@@ -254,7 +254,7 @@ func buildBreadcrumbs(urlPath string) []Breadcrumb {
 	parts := strings.Split(strings.Trim(urlPath, "/"), "/")
 
 	var crumbs []Breadcrumb
-	crumbs = append(crumbs, Breadcrumb{Name: "Home", URLPath: "/", IsLast: len(parts) == 0 || parts[0] == ""})
+	crumbs = append(crumbs, Breadcrumb{Name: "home", URLPath: "/", IsLast: len(parts) == 0 || parts[0] == ""})
 
 	if len(parts) == 0 || parts[0] == "" {
 		return crumbs

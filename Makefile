@@ -16,3 +16,6 @@ arm64:
 
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -f jotasrv-*.pkg.tar.zst
+	rm -rf src/
+	rm -rf pkg/
