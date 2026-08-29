@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,6 +13,24 @@ import (
 	"syscall"
 	"time"
 )
+
+func getLocalIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+	for _, addr := range addrs {
+		ipNet, ok := addr.(*net.IPNet)
+		if !ok || ipNet.IP.IsLoopback() {
+			continue
+		}
+		ip4 := ipNet.IP.To4()
+		if ip4 != nil && ip4[0] == 192 && ip4[1] == 168 {
+			return ip4.String()
+		}
+	}
+	return ""
+}
 
 func main() {
 	portFlag := flag.String("p", "1725", "Port to listen on")
@@ -91,6 +110,15 @@ func main() {
 	}()
 
 	fmt.Printf("Starting server at http://%s\n", addr)
+	if !*localFlag {
+		if localIP := getLocalIP(); localIP != "" {
+			scheme := "http"
+			if *certFlag != "" && *keyFlag != "" {
+				scheme = "https"
+			}
+			fmt.Printf("Local network: %s://%s:%s\n", scheme, localIP, *portFlag)
+		}
+	}
 	fmt.Printf("Serving directory: %s\n", rootDir)
 	if *certFlag != "" && *keyFlag != "" {
 		fmt.Println("TLS enabled")
