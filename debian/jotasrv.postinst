@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = configure ]; then
+    if ! getent passwd jotasrv >/dev/null; then
+        adduser --system --group --no-create-home --gecos "jotasrv file server" jotasrv
+    fi
+    if [ ! -d /srv/jotasrv ]; then
+        install -d -m 755 -o jotasrv -g jotasrv /srv/jotasrv
+    fi
+fi
+
+#DEBHELPER#

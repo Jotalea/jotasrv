@@ -1,0 +1,11 @@
+# Configuration for the jotasrv systemd service.
+# Apply changes with: systemctl restart jotasrv
+
+# Command-line flags (see `jotasrv -h`), e.g. "-p 8080 -log -persist-dl"
+# or "-cert /etc/ssl/cert.pem -key /etc/ssl/key.pem" for HTTPS.
+JOTASRV_ARGS="-p 1725 -log"
+
+# Directory to serve. The service user needs access to it, and write access
+# if uploads/file operations are used (add it to ReadWritePaths via
+# `systemctl edit jotasrv` if it is outside /srv/jotasrv).
+JOTASRV_ROOT="/srv/jotasrv"

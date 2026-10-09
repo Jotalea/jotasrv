@@ -1,1 +1,12 @@
 build/*
+out/
+*.deb
+*.buildinfo
+*.changes
+debian/.gocache
+debian/.home
+debian/jotasrv
+debian/files
+debian/*.substvars
+debian/*.debhelper*
+debian/debhelper-build-stamp

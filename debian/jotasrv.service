@@ -1,0 +1,23 @@
+[Unit]
+Description=jotasrv file server
+Documentation=https://github.com/jotalea/jotasrv
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=jotasrv
+Group=jotasrv
+EnvironmentFile=-/etc/default/jotasrv
+ExecStart=/usr/bin/jotasrv $JOTASRV_ARGS $JOTASRV_ROOT
+Restart=on-failure
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ReadWritePaths=/srv/jotasrv
+
+[Install]
+WantedBy=multi-user.target

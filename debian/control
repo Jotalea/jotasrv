@@ -1,0 +1,15 @@
+Source: jotasrv
+Section: web
+Priority: optional
+Maintainer: Jotalea <main@jotalea.com.ar>
+Build-Depends: debhelper-compat (= 13), golang-go
+Standards-Version: 4.6.2
+Homepage: https://github.com/jotalea/jotasrv
+Rules-Requires-Root: no
+
+Package: jotasrv
+Architecture: amd64 arm64 armhf
+Depends: ${misc:Depends}
+Description: lightweight file server with a web UI
+ jotasrv serves a directory over HTTP(S) with directory listing, file
+ operations, uploads and a web UI. It is a single static binary.
