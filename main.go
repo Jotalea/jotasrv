@@ -40,6 +40,9 @@ func main() {
 	logFlag := flag.Bool("log", false, "Enable access logging to stdout")
 	liteFlag := flag.Bool("lite", false, "Force lightweight UI (no JavaScript)")
 	persistDLFlag := flag.Bool("persist-dl", false, "Persist download counts to .dlcounts.json")
+	userFlag := flag.String("user", envOr("JOTASRV_USER", "admin"), "Login username (env JOTASRV_USER)")
+	passFlag := flag.String("pass", envOr("JOTASRV_PASS", "1234"), "Login password (env JOTASRV_PASS)")
+	noAuthFlag := flag.Bool("no-auth", false, "Disable login")
 	versionFlag := flag.Bool("version", false, "Print version and exit")
 	flag.Parse()
 
@@ -75,6 +78,9 @@ func main() {
 	addr := fmt.Sprintf("%s:%s", host, *portFlag)
 
 	var handler http.Handler = http.HandlerFunc(handleRequest)
+	if !*noAuthFlag {
+		handler = newAuthHandler(handler, *userFlag, *passFlag)
+	}
 	if *logFlag {
 		handler = newLoggingHandler(handler)
 	}
@@ -122,6 +128,14 @@ func main() {
 	fmt.Printf("Serving directory: %s\n", rootDir)
 	if *certFlag != "" && *keyFlag != "" {
 		fmt.Println("TLS enabled")
+	}
+	if *noAuthFlag {
+		fmt.Println("Login disabled")
+	} else {
+		fmt.Printf("Login enabled (user: %s)\n", *userFlag)
+		if *userFlag == "admin" && *passFlag == "1234" {
+			fmt.Println("WARNING: using the default credentials admin:1234, change them with -user/-pass")
+		}
 	}
 	if liteMode {
 		fmt.Println("Lightweight mode (no JavaScript)")

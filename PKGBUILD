@@ -50,7 +50,7 @@ ReadWritePaths=/srv/jotasrv
 WantedBy=multi-user.target
 EOF2
 
-	install -Dm644 /dev/stdin "${pkgdir}/etc/jotasrv.conf" <<'EOF2'
+	install -Dm600 /dev/stdin "${pkgdir}/etc/jotasrv.conf" <<'EOF2'
 # Configuration for the jotasrv systemd service.
 # Apply changes with: systemctl restart jotasrv
 
@@ -62,6 +62,11 @@ JOTASRV_ARGS="-p 1725 -log"
 # if uploads/file operations are used (add it to ReadWritePaths via
 # `systemctl edit jotasrv` if it is outside /srv/jotasrv).
 JOTASRV_ROOT="/srv/jotasrv"
+
+# Login (HTTP basic auth). Defaults to admin / 1234, CHANGE THESE.
+# To disable login, add -no-auth to JOTASRV_ARGS.
+JOTASRV_USER="admin"
+JOTASRV_PASS="1234"
 EOF2
 
 	install -Dm644 /dev/stdin "${pkgdir}/usr/lib/sysusers.d/${pkgname}.conf" <<'EOF2'

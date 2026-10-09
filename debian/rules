@@ -26,6 +26,10 @@ override_dh_auto_test:
 override_dh_auto_install:
 	install -Dm755 jotasrv debian/jotasrv/usr/bin/jotasrv
 
+override_dh_fixperms:
+	dh_fixperms
+	chmod 600 debian/jotasrv/etc/default/jotasrv
+
 override_dh_dwz:
 override_dh_strip:
 

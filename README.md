@@ -10,7 +10,19 @@ jotasrv [flags] [directory]
   -log           access logging to stdout
   -lite          force lightweight UI (no JavaScript)
   -persist-dl    persist download counts to .dlcounts.json
+  -user admin    login username (or env JOTASRV_USER)
+  -pass 1234     login password (or env JOTASRV_PASS)
+  -no-auth       disable login
   -version       print version and exit
+```
+
+Login uses HTTP basic auth and is **on by default with `admin` / `1234`**,
+so change it. Flags can also be written with two dashes (`--user`, `--pass`).
+Passing the password via `JOTASRV_PASS` keeps it out of the process list.
+
+```sh
+jotasrv --user me --pass 's3cret' /some/dir
+JOTASRV_USER=me JOTASRV_PASS='s3cret' jotasrv /some/dir
 ```
 
 ## Building
@@ -71,7 +83,8 @@ user and serving `/srv/jotasrv`.
 |---|---|---|
 | Config | `/etc/default/jotasrv` | `/etc/jotasrv.conf` |
 
-Set `JOTASRV_ARGS` (flags) and `JOTASRV_ROOT` (directory) in the config, then:
+Set `JOTASRV_ARGS` (flags), `JOTASRV_ROOT` (directory) and `JOTASRV_USER` /
+`JOTASRV_PASS` (login) in the config (mode 600, root-only), then:
 
 ```sh
 sudo systemctl restart jotasrv
