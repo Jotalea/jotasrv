@@ -12,6 +12,7 @@ jotasrv [flags] [directory]
   -persist-dl    persist download counts to .dlcounts.json
   -user admin    login username (or env JOTASRV_USER)
   -pass 1234     login password (or env JOTASRV_PASS)
+  -public        serve ./public_html at /public/ (read-only, no login)
   -no-auth       disable login
   -version       print version and exit
 ```

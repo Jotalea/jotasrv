@@ -42,6 +42,7 @@ func main() {
 	persistDLFlag := flag.Bool("persist-dl", false, "Persist download counts to .dlcounts.json")
 	userFlag := flag.String("user", envOr("JOTASRV_USER", "admin"), "Login username (env JOTASRV_USER)")
 	passFlag := flag.String("pass", envOr("JOTASRV_PASS", "1234"), "Login password (env JOTASRV_PASS)")
+	publicFlag := flag.Bool("public", false, "Serve ./public_html (read-only, no login) at /public/")
 	noAuthFlag := flag.Bool("no-auth", false, "Disable login")
 	versionFlag := flag.Bool("version", false, "Print version and exit")
 	flag.Parse()
@@ -80,6 +81,17 @@ func main() {
 	var handler http.Handler = http.HandlerFunc(handleRequest)
 	if !*noAuthFlag {
 		handler = newAuthHandler(handler, *userFlag, *passFlag)
+	}
+	publicDir := ""
+	if *publicFlag {
+		publicDir, err = filepath.Abs("public_html")
+		if err != nil {
+			log.Fatalf("Failed to resolve public_html: %v", err)
+		}
+		if st, statErr := os.Stat(publicDir); statErr != nil || !st.IsDir() {
+			log.Fatalf("-public needs a public_html directory in the working directory (%s)", publicDir)
+		}
+		handler = newPublicHandler(handler, publicDir)
 	}
 	if *logFlag {
 		handler = newLoggingHandler(handler)
@@ -126,6 +138,9 @@ func main() {
 		}
 	}
 	fmt.Printf("Serving directory: %s\n", rootDir)
+	if publicDir != "" {
+		fmt.Printf("Public content (read-only, no login): %s -> /public/\n", publicDir)
+	}
 	if *certFlag != "" && *keyFlag != "" {
 		fmt.Println("TLS enabled")
 	}
