@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"mime"
-	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -211,53 +210,69 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleUpload(w http.ResponseWriter, r *http.Request, targetDir string, redirectURL string) {
-	// Parts beyond 32 MiB are spooled to temporary files instead of memory.
-	if err := r.ParseMultipartForm(32 << 20); err != nil {
-		http.Error(w, "upload too large or invalid", http.StatusBadRequest)
-		return
-	}
-	defer r.MultipartForm.RemoveAll()
-
-	files := r.MultipartForm.File["files"]
-	if len(files) == 0 {
-		files = r.MultipartForm.File["file"]
-	}
-	if len(files) == 0 {
-		http.Error(w, "no files provided", http.StatusBadRequest)
+	// Stream each part straight into targetDir instead of ParseMultipartForm,
+	// which spools large parts to $TMPDIR (often a small tmpfs) and copies them twice.
+	mr, err := r.MultipartReader()
+	if err != nil {
+		http.Error(w, "invalid upload", http.StatusBadRequest)
 		return
 	}
 
-	for _, header := range files {
-		name := filepath.Base(header.Filename)
-		if !validName(name) {
-			http.Error(w, fmt.Sprintf("invalid file name %q", header.Filename), http.StatusBadRequest)
+	saved := 0
+	for {
+		part, err := mr.NextPart()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			http.Error(w, "invalid upload: "+err.Error(), http.StatusBadRequest)
 			return
 		}
-		if err := saveUploadedFile(header, filepath.Join(targetDir, name)); err != nil {
+		if fn := part.FormName(); (fn != "files" && fn != "file") || part.FileName() == "" {
+			part.Close()
+			continue
+		}
+		name := filepath.Base(part.FileName())
+		if !validName(name) {
+			part.Close()
+			http.Error(w, fmt.Sprintf("invalid file name %q", part.FileName()), http.StatusBadRequest)
+			return
+		}
+		err = streamToFile(part, targetDir, name)
+		part.Close()
+		if err != nil {
 			http.Error(w, fmt.Sprintf("failed to save %q: %v", name, err), http.StatusInternalServerError)
 			return
 		}
+		saved++
+	}
+	if saved == 0 {
+		http.Error(w, "no files provided", http.StatusBadRequest)
+		return
 	}
 
 	http.Redirect(w, r, escapeURL(redirectURL), http.StatusSeeOther)
 }
 
-func saveUploadedFile(header *multipart.FileHeader, destPath string) error {
-	src, err := header.Open()
+// streamToFile writes src to a temp file in dir and renames it into place,
+// so a dropped connection never leaves a truncated file under the real name.
+func streamToFile(src io.Reader, dir, name string) error {
+	tmp, err := os.CreateTemp(dir, ".upload-*.part")
 	if err != nil {
 		return err
 	}
-	defer src.Close()
-	dst, err := os.Create(destPath)
-	if err != nil {
-		return err
-	}
-	_, err = io.Copy(dst, src)
-	if cerr := dst.Close(); err == nil {
+	_, err = io.Copy(tmp, src)
+	if cerr := tmp.Close(); err == nil {
 		err = cerr
 	}
+	if err == nil {
+		err = os.Chmod(tmp.Name(), 0644)
+	}
+	if err == nil {
+		err = os.Rename(tmp.Name(), filepath.Join(dir, name))
+	}
 	if err != nil {
-		os.Remove(destPath)
+		os.Remove(tmp.Name())
 	}
 	return err
 }
