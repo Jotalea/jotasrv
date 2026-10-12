@@ -3,7 +3,7 @@
 #   cd /path/to/jotasrv-source && makepkg -si
 
 pkgname=jotasrv
-pkgver=2.2.1
+pkgver=2.3.0
 pkgrel=1
 pkgdesc="A lightweight file server with directory listing, file operations, upload, and a web UI"
 arch=('x86_64')
