@@ -7,6 +7,8 @@ Wants=network-online.target
 [Service]
 User=jotasrv
 Group=jotasrv
+StateDirectory=jotasrv
+WorkingDirectory=/var/lib/jotasrv
 EnvironmentFile=-/etc/default/jotasrv
 ExecStart=/usr/bin/jotasrv $JOTASRV_ARGS $JOTASRV_ROOT
 Restart=on-failure

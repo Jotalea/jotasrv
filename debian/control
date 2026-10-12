@@ -9,7 +9,7 @@ Rules-Requires-Root: no
 
 Package: jotasrv
 Architecture: amd64 arm64 armhf
-Depends: ${misc:Depends}
+Depends: adduser, ${misc:Depends}
 Description: lightweight file server with a web UI
  jotasrv serves a directory over HTTP(S) with directory listing, file
  operations, uploads and a web UI. It is a single static binary.

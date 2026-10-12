@@ -1,6 +1,5 @@
 # Maintainer: jotalea <main@jotalea.com.ar>
-# Build from a local source directory (no download):
-#   cp packaging/local/PKGBUILD /path/to/jotasrv-source/
+# Build from a local source checkout (no download):
 #   cd /path/to/jotasrv-source && makepkg -si
 
 pkgname=jotasrv
@@ -34,6 +33,8 @@ Wants=network-online.target
 [Service]
 User=jotasrv
 Group=jotasrv
+StateDirectory=jotasrv
+WorkingDirectory=/var/lib/jotasrv
 EnvironmentFile=-/etc/jotasrv.conf
 ExecStart=/usr/bin/jotasrv $JOTASRV_ARGS $JOTASRV_ROOT
 Restart=on-failure

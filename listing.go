@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -144,17 +145,13 @@ func buildFileList(entries []os.DirEntry, cleanURL string) ([]FileData, DirStats
 	stats := DirStats{}
 
 	if cleanURL != "/" && cleanURL != "." {
-		parentURL := filepath.Dir(cleanURL)
-		if parentURL == "." {
-			parentURL = "/"
-		}
 		files = append(files, FileData{
 			Name:       "..",
 			IsDir:      true,
 			SizeStr:    "-",
 			ModTime:    "-",
 			ModTimeRel: "-",
-			URLPath:    parentURL,
+			URLPath:    escapeURL(parentURL(cleanURL)),
 		})
 	}
 
@@ -178,10 +175,7 @@ func buildFileList(entries []os.DirEntry, cleanURL string) ([]FileData, DirStats
 			sizeVal = info.Size()
 		}
 
-		fileURLPath := filepath.ToSlash(filepath.Join(cleanURL, entry.Name()))
-		if !strings.HasPrefix(fileURLPath, "/") {
-			fileURLPath = "/" + fileURLPath
-		}
+		fileURLPath := path.Join("/", cleanURL, entry.Name())
 
 		ext := getFileExt(entry.Name())
 		isText := !entry.IsDir() && isTextFile(entry.Name())
@@ -189,14 +183,13 @@ func buildFileList(entries []os.DirEntry, cleanURL string) ([]FileData, DirStats
 		isVid := !entry.IsDir() && isVideoFile(entry.Name())
 
 		editURL := ""
-		deleteURL := "/delete" + fileURLPath
-		renameURL := "/rename" + fileURLPath
+		deleteURL := escapeURL("/delete" + fileURLPath)
+		renameURL := escapeURL("/rename" + fileURLPath)
 		zipURL := ""
 		if entry.IsDir() {
-			zipURL = "/zip" + fileURLPath
-			editURL = ""
+			zipURL = escapeURL("/zip" + fileURLPath)
 		} else if isText {
-			editURL = "/edit" + fileURLPath
+			editURL = escapeURL("/edit" + fileURLPath)
 		}
 
 		dlCount := 0
@@ -214,7 +207,7 @@ func buildFileList(entries []os.DirEntry, cleanURL string) ([]FileData, DirStats
 			ModTime:    info.ModTime().Format("2006-01-02 15:04"),
 			ModTimeRel: formatRelativeTime(info.ModTime()),
 			ModTimeISO: info.ModTime().Format(time.RFC3339),
-			URLPath:    fileURLPath,
+			URLPath:    escapeURL(fileURLPath),
 			Ext:        ext,
 			IsText:     isText,
 			IsImage:    isImg,
@@ -265,7 +258,7 @@ func buildBreadcrumbs(urlPath string) []Breadcrumb {
 		currentPath += "/" + part
 		crumbs = append(crumbs, Breadcrumb{
 			Name:    part,
-			URLPath: currentPath,
+			URLPath: escapeURL(currentPath),
 			IsLast:  i == len(parts)-1,
 		})
 	}

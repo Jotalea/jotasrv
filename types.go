@@ -37,6 +37,7 @@ type DirStats struct {
 
 type PageData struct {
 	CurrentPath string
+	CurrentURL  string
 	Breadcrumbs []Breadcrumb
 	Files       []FileData
 	CSS         template.CSS
@@ -74,4 +75,5 @@ type RenamePageData struct {
 	CSS         template.CSS
 	OldName     string
 	NewURL      string
+	CancelURL   string
 }

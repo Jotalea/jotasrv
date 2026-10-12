@@ -66,6 +66,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to resolve root directory: %v", err)
 	}
+	if st, statErr := os.Stat(rootDir); statErr != nil || !st.IsDir() {
+		log.Fatalf("Root directory %s does not exist or is not a directory", rootDir)
+	}
+	if (*certFlag == "") != (*keyFlag == "") {
+		log.Fatalf("-cert and -key must be used together")
+	}
 	liteMode = *liteFlag
 
 	if *persistDLFlag {
@@ -78,7 +84,9 @@ func main() {
 	}
 	addr := fmt.Sprintf("%s:%s", host, *portFlag)
 
-	var handler http.Handler = http.HandlerFunc(handleRequest)
+	// Browsers attach cached basic-auth credentials to cross-site form posts,
+	// so reject cross-origin state-changing requests (CSRF).
+	var handler http.Handler = http.NewCrossOriginProtection().Handler(http.HandlerFunc(handleRequest))
 	if !*noAuthFlag {
 		handler = newAuthHandler(handler, *userFlag, *passFlag)
 	}
@@ -159,15 +167,15 @@ func main() {
 
 	<-ctx.Done()
 
-	if *persistDLFlag {
-		saveDownloadCounts()
-	}
-
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		log.Printf("Shutdown error: %v", err)
+	}
+
+	if *persistDLFlag {
+		saveDownloadCounts()
 	}
 	fmt.Println("Server stopped.")
 }

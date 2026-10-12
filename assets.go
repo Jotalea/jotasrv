@@ -345,11 +345,11 @@ const editorBreadcrumbBlock = `<nav class="breadcrumbs">
 const newMenuBlock = `<details class="menu">
 	<summary>` + iconPlus + ` New</summary>
 	<div class="menu-panel">
-		<form action="/mkdir{{ .CurrentPath }}" method="POST">
+		<form action="/mkdir{{ .CurrentURL }}" method="POST">
 			<input type="text" name="dirname" placeholder="Folder name" required>
 			<button type="submit" class="btn-small btn-secondary">` + iconFolder + `</button>
 		</form>
-		<form action="/mkfile{{ .CurrentPath }}" method="POST">
+		<form action="/mkfile{{ .CurrentURL }}" method="POST">
 			<input type="text" name="filename" placeholder="File name" required>
 			<button type="submit" class="btn-small btn-secondary">` + iconFile + `</button>
 		</form>
@@ -422,13 +422,13 @@ const htmlFull = `<!DOCTYPE html>
 								{{ end }}
 								<span class="file-name">{{ .Name }}</span>
 							</a>
-							<div class="actions">
+							{{ if .DeleteURL }}<div class="actions">
 								{{ if .EditURL }}<a class="icon-btn" href="{{ .EditURL }}" title="Edit">` + iconPencil + `</a>{{ end }}
 								{{ if .ZipURL }}<a class="icon-btn" href="{{ .ZipURL }}" title="Download zip">` + iconDownload + `</a>{{ end }}
 								<a class="icon-btn" href="{{ .URLPath }}" title="Copy link" onclick="copyLink(event, '{{ .URLPath }}')">` + iconLink + `</a>
 								<a class="icon-btn" href="{{ .RenameURL }}" title="Rename">` + iconRename + `</a>
 								<a class="icon-btn danger" href="{{ .DeleteURL }}" title="Delete">` + iconTrash + `</a>
-							</div>
+							</div>{{ end }}
 						</td>
 						<td class="col-size">{{ .SizeStr }}</td>
 						<td class="col-date"><span class="rel-time" title="{{ .ModTime }}" data-iso="{{ .ModTimeISO }}">{{ .ModTimeRel }}</span></td>
@@ -561,7 +561,7 @@ const htmlFull = `<!DOCTYPE html>
 		label.textContent = 'Uploading ' + files.length + (files.length === 1 ? ' file...' : ' files...');
 		
 		var xhr = new XMLHttpRequest();
-		xhr.open('POST', '{{ .CurrentPath }}', true);
+		xhr.open('POST', '{{ .CurrentURL }}', true);
 		if (xhr.upload) {
 			xhr.upload.onprogress = function(e) {
 				if (e.lengthComputable) { bar.style.width = Math.round((e.loaded / e.total) * 100) + '%'; }
@@ -603,7 +603,7 @@ const htmlLite = `<!DOCTYPE html>
 
 	<div class="container">
 		<div class="toolbar">
-			<form action="{{ .CurrentPath }}" method="POST" enctype="multipart/form-data" class="upload-form">
+			<form action="{{ .CurrentURL }}" method="POST" enctype="multipart/form-data" class="upload-form">
 				<input type="file" name="files" multiple>
 				<button type="submit">Upload</button>
 			</form>
@@ -635,12 +635,12 @@ const htmlLite = `<!DOCTYPE html>
 								{{ end }}
 								<span class="file-name">{{ .Name }}</span>
 							</a>
-							<div class="actions always">
+							{{ if .DeleteURL }}<div class="actions always">
 								{{ if .EditURL }}<a class="icon-btn" href="{{ .EditURL }}" title="Edit">` + iconPencil + `</a>{{ end }}
 								{{ if .ZipURL }}<a class="icon-btn" href="{{ .ZipURL }}" title="Download zip">` + iconDownload + `</a>{{ end }}
 								<a class="icon-btn" href="{{ .RenameURL }}" title="Rename">` + iconRename + `</a>
 								<a class="icon-btn danger" href="{{ .DeleteURL }}" title="Delete">` + iconTrash + `</a>
-							</div>
+							</div>{{ end }}
 						</td>
 						<td class="col-size">{{ .SizeStr }}</td>
 						<td class="col-date">{{ .ModTime }}</td>
@@ -691,7 +691,8 @@ const editorHTML = `<!DOCTYPE html>
 
 			<div class="editor-shell">
 				<pre aria-hidden="true"><code id="hlLayer"></code></pre>
-				<textarea class="code" name="content" id="editor" spellcheck="false" autocomplete="off" autocapitalize="off">{{ .Content }}</textarea>
+				<textarea class="code" name="content" id="editor" spellcheck="false" autocomplete="off" autocapitalize="off">
+{{ .Content }}</textarea>
 			</div>
 		</form>
 	</div>
@@ -735,15 +736,20 @@ const editorHTML = `<!DOCTYPE html>
 			}
 		});
 
+		var form = document.getElementById('editForm');
+		var saving = false;
+		form.addEventListener('submit', function() { saving = true; });
+
 		document.addEventListener('keydown', function(e) {
 			if ((e.ctrlKey || e.metaKey) && e.key === 's') {
 				e.preventDefault();
-				document.getElementById('editForm').submit();
+				saving = true;
+				form.submit();
 			}
 		});
 
 		window.addEventListener('beforeunload', function(e) {
-			if (ta.value !== initial) { e.preventDefault(); e.returnValue = ''; }
+			if (!saving && ta.value !== initial) { e.preventDefault(); e.returnValue = ''; }
 		});
 	})();
 	</script>
@@ -777,7 +783,8 @@ const editorLiteHTML = `<!DOCTYPE html>
 				</div>
 			</div>
 			<div class="editor-shell">
-				<textarea class="code" name="content" spellcheck="false" autocomplete="off" autocapitalize="off">{{ .Content }}</textarea>
+				<textarea class="code" name="content" spellcheck="false" autocomplete="off" autocapitalize="off">
+{{ .Content }}</textarea>
 			</div>
 		</form>
 	</div>
@@ -836,7 +843,7 @@ const renameHTML = `<!DOCTYPE html>
 				<input type="text" name="newname" value="{{ .OldName }}" autofocus required>
 				<div class="btn-row">
 					<button type="submit">Rename</button>
-					<a href="javascript:history.back()" class="btn btn-secondary">Cancel</a>
+					<a href="{{ .CancelURL }}" class="btn btn-secondary">Cancel</a>
 				</div>
 			</form>
 		</div>
