@@ -251,6 +251,11 @@ func handleUpload(w http.ResponseWriter, r *http.Request, targetDir string, redi
 		return
 	}
 
+	// The JS uploader sends one request per file; skip re-rendering the listing for each.
+	if r.Header.Get("X-Upload") != "" {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	http.Redirect(w, r, escapeURL(redirectURL), http.StatusSeeOther)
 }
 

@@ -151,8 +151,57 @@ a { color: var(--blue); }
 .upload-zone svg { color: var(--mauve); flex-shrink: 0; width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; }
 .upload-form { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: var(--surface0); border-radius: var(--radius-md); padding: 10px 16px; flex: 2; }
 
+.upload-zone .upload-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.upload-zone .upload-hint { font-size: 0.76rem; color: var(--overlay1); }
+.upload-zone.busy { border-style: solid; border-color: var(--mauve); }
 .progress { display: none; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: transparent; }
+.upload-zone.busy .progress { display: block; }
 .progress-bar { height: 100%; width: 0; background: var(--mauve); transition: width 0.15s; }
+
+/* page-wide drop overlay */
+.drop-overlay {
+	position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;
+	background: rgba(17, 17, 27, 0.55); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+	opacity: 0; pointer-events: none; transition: opacity 0.12s ease;
+}
+.drop-overlay.show { opacity: 1; }
+.drop-overlay-inner {
+	display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 36px 48px;
+	background: var(--surface0); color: var(--text); border: 2px dashed var(--mauve);
+	border-radius: var(--radius-lg); box-shadow: var(--shadow-md); font-weight: 600; text-align: center;
+}
+.drop-overlay-inner svg { width: 40px; height: 40px; color: var(--mauve); stroke: currentColor; fill: none; stroke-width: 2; }
+.drop-overlay-inner .drop-dest { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 400; color: var(--subtext0); word-break: break-all; }
+
+/* upload queue */
+.upload-queue { background: var(--surface0); border-radius: var(--radius-lg); margin-bottom: 24px; box-shadow: var(--shadow-sm); overflow: hidden; }
+.upload-queue[hidden] { display: none; }
+.uq-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--mantle); flex-wrap: wrap; }
+.uq-title { font-weight: 600; font-size: 0.9rem; }
+.uq-summary { flex: 1; min-width: 0; color: var(--subtext0); font-size: 0.8rem; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.uq-actions { display: flex; gap: 6px; }
+.uq-actions button { padding: 6px 12px; font-size: 0.8rem; }
+.uq-actions button[hidden] { display: none; }
+.uq-list { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; }
+.uq-item { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 10px 16px; border-top: 1px solid var(--surface1); align-items: center; }
+.uq-item:first-child { border-top: none; }
+.uq-name { font-family: var(--font-mono); font-size: 0.86rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.uq-note { margin-left: 8px; font-family: var(--font-sans); font-size: 0.72rem; color: var(--yellow); }
+.uq-btns { display: flex; gap: 2px; grid-row: span 2; }
+.uq-btns .icon-btn { width: 28px; height: 28px; }
+.uq-btns .icon-btn[hidden] { display: none; }
+.uq-meta { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.uq-bar { flex: 1; height: 6px; background: var(--surface1); border-radius: var(--radius-full); overflow: hidden; min-width: 60px; }
+.uq-bar span { display: block; height: 100%; width: 0; background: var(--mauve); border-radius: inherit; transition: width 0.15s; }
+.uq-status { font-size: 0.76rem; color: var(--subtext0); font-family: var(--font-mono); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.uq-item.is-finishing .uq-bar span { background: var(--blue); animation: uq-pulse 1s ease-in-out infinite; }
+.uq-item.is-done .uq-bar span { background: var(--green); }
+.uq-item.is-done .uq-status { color: var(--green); }
+.uq-item.is-failed .uq-bar span { background: var(--red); }
+.uq-item.is-failed .uq-status { color: var(--red); white-space: normal; }
+.uq-item.is-cancelled .uq-bar span { background: var(--overlay0); }
+.uq-item.is-cancelled .uq-name, .uq-item.is-queued .uq-name { color: var(--subtext0); }
+@keyframes uq-pulse { 50% { opacity: 0.5; } }
 
 /* menus & inputs */
 details.menu { position: relative; }
@@ -324,6 +373,8 @@ const iconPencil = `<svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2
 const iconRename = `<svg viewBox="0 0 24 24"><path d="M20.59 13.41L11.17 4A2 2 0 0 0 9.75 3.4L4.6 3.4a1.2 1.2 0 0 0-1.2 1.2v5.15c0 .53.21 1.04.59 1.42l9.42 9.42a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83z"/><circle cx="7.9" cy="7.9" r="1.15"/></svg>`
 const iconDownload = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>`
 const iconTrash = `<svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>`
+const iconX = `<svg viewBox="0 0 24 24"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>`
+const iconRetry = `<svg viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>`
 const iconChevron = `<svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg>`
 const iconWarning = `<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`
 const iconEmpty = `<svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>`
@@ -385,9 +436,12 @@ const htmlFull = `<!DOCTYPE html>
 		<div class="toolbar">
 			<label class="upload-zone" id="dropZone" for="fileInput">
 				` + iconUpload + `
-				<span id="uploadLabel">Drop files or click to browse</span>
+				<span class="upload-text">
+					<span id="uploadLabel">Drop files or click to browse</span>
+					<span class="upload-hint" id="uploadHint">You can drop files anywhere on the page</span>
+				</span>
 				<input type="file" name="files" id="fileInput" multiple hidden>
-				<span class="progress" id="uploadProgress"><span class="progress-bar" id="uploadBar"></span></span>
+				<span class="progress"><span class="progress-bar" id="uploadBar"></span></span>
 			</label>
 			` + newMenuBlock + `
 			<div class="search-wrap">
@@ -395,6 +449,20 @@ const htmlFull = `<!DOCTYPE html>
 				<input type="search" id="searchInput" class="search-box" placeholder="Filter files ( / )">
 			</div>
 		</div>
+
+		<section class="upload-queue" id="uploadQueue" hidden aria-live="polite">
+			<div class="uq-head">
+				<span class="uq-title" id="uqTitle">Uploads</span>
+				<span class="uq-summary" id="uqSummary"></span>
+				<div class="uq-actions">
+					<button type="button" class="btn-secondary" id="uqCancelAll">Cancel all</button>
+					<button type="button" class="btn-secondary" id="uqRetryAll" hidden>Retry failed</button>
+					<button type="button" id="uqRefresh" hidden>Refresh</button>
+					<button type="button" class="btn-secondary" id="uqDismiss" hidden>Dismiss</button>
+				</div>
+			</div>
+			<ul class="uq-list" id="uqList"></ul>
+		</section>
 
 		<div class="panel">
 			<table class="file-table" id="fileTable">
@@ -448,6 +516,25 @@ const htmlFull = `<!DOCTYPE html>
 	</div>
 
 	<div class="toast" id="toast"></div>
+
+	<div class="drop-overlay" id="dropOverlay" aria-hidden="true">
+		<div class="drop-overlay-inner">
+			` + iconUpload + `
+			<span>Drop to upload</span>
+			<span class="drop-dest">{{ .CurrentPath }}</span>
+		</div>
+	</div>
+
+	<template id="uqItemTpl">
+		<li class="uq-item is-queued">
+			<span class="uq-name"></span>
+			<span class="uq-btns">
+				<button type="button" class="icon-btn uq-retry" title="Retry" hidden>` + iconRetry + `</button>
+				<button type="button" class="icon-btn danger uq-cancel" title="Cancel">` + iconX + `</button>
+			</span>
+			<span class="uq-meta"><span class="uq-bar"><span></span></span><span class="uq-status">Queued</span></span>
+		</li>
+	</template>
 
 	<script>
 	var toastTimer;
@@ -537,49 +624,305 @@ const htmlFull = `<!DOCTYPE html>
 	setInterval(updateRelTimes, 60000);
 	updateRelTimes();
 
-	var dropZone = document.getElementById('dropZone');
-	var fileInput = document.getElementById('fileInput');
+	(function() {
+		var uploadURL = '{{ .CurrentURL }}';
+		var MAX_PARALLEL = 2;
+		var IDLE_LABEL = 'Drop files or click to browse';
+		var IDLE_HINT = 'You can drop files anywhere on the page';
 
-	dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('dragover'); });
-	dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('dragover'); });
-	dropZone.addEventListener('drop', function(e) {
-		e.preventDefault();
-		dropZone.classList.remove('dragover');
-		uploadFiles(e.dataTransfer.files);
-	});
-	fileInput.addEventListener('change', function() { uploadFiles(fileInput.files); });
+		var dropZone = document.getElementById('dropZone');
+		var fileInput = document.getElementById('fileInput');
+		var overlay = document.getElementById('dropOverlay');
+		var zoneBar = document.getElementById('uploadBar');
+		var zoneLabel = document.getElementById('uploadLabel');
+		var zoneHint = document.getElementById('uploadHint');
+		var panel = document.getElementById('uploadQueue');
+		var list = document.getElementById('uqList');
+		var title = document.getElementById('uqTitle');
+		var summary = document.getElementById('uqSummary');
+		var btnCancelAll = document.getElementById('uqCancelAll');
+		var btnRetryAll = document.getElementById('uqRetryAll');
+		var btnRefresh = document.getElementById('uqRefresh');
+		var btnDismiss = document.getElementById('uqDismiss');
+		var tpl = document.getElementById('uqItemTpl');
 
-	function uploadFiles(files) {
-		if (!files || files.length === 0) return;
-		var fd = new FormData();
-		for (var i = 0; i < files.length; i++) { fd.append('files', files[i]); }
-		var progress = document.getElementById('uploadProgress');
-		var bar = document.getElementById('uploadBar');
-		var label = document.getElementById('uploadLabel');
-		
-		progress.style.display = 'block';
-		label.textContent = 'Uploading ' + files.length + (files.length === 1 ? ' file...' : ' files...');
-		
-		var xhr = new XMLHttpRequest();
-		xhr.open('POST', '{{ .CurrentURL }}', true);
-		if (xhr.upload) {
-			xhr.upload.onprogress = function(e) {
-				if (e.lengthComputable) { bar.style.width = Math.round((e.loaded / e.total) * 100) + '%'; }
+		var items = [];
+		var reloadTimer = null;
+
+		function fmtBytes(n) {
+			var units = ['B', 'KB', 'MB', 'GB', 'TB'];
+			var i = 0;
+			while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+			return (i === 0 ? n : n.toFixed(n < 10 ? 1 : 0)) + ' ' + units[i];
+		}
+		function fmtDuration(s) {
+			s = Math.max(1, Math.round(s));
+			if (s < 60) return s + 's';
+			if (s < 3600) return Math.floor(s / 60) + 'm ' + (s % 60) + 's';
+			return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
+		}
+		function isActive(it) { return it.state === 'uploading' || it.state === 'finishing'; }
+		function isPending(it) { return it.state === 'queued' || isActive(it); }
+
+		function existingNames() {
+			var map = {};
+			document.querySelectorAll('#fileTable tr.file-row').forEach(function(r) { map[r.dataset.name] = r.dataset.dir; });
+			return map;
+		}
+
+		function addFiles(files, folderNames) {
+			if (!files.length && !folderNames.length) return;
+			clearTimeout(reloadTimer);
+			var existing = existingNames();
+			files.forEach(function(f) {
+				var note = '';
+				if (existing[f.name] === '0') note = 'replaces existing';
+				else if (existing[f.name] === '1') note = 'a folder has this name';
+				addItem(f, f.name, note, null);
+			});
+			folderNames.forEach(function(name) {
+				addItem(null, name + '/', '', 'Folders can\'t be uploaded; select the files inside instead');
+			});
+			panel.hidden = false;
+			pump();
+			render();
+		}
+
+		function addItem(file, name, note, error) {
+			var el = tpl.content.firstElementChild.cloneNode(true);
+			var it = {
+				file: file, el: el, loaded: 0, xhr: null, started: 0,
+				size: file ? file.size : 0,
+				bar: el.querySelector('.uq-bar span'),
+				status: el.querySelector('.uq-status'),
+				btnRetry: el.querySelector('.uq-retry'),
+				btnCancel: el.querySelector('.uq-cancel')
 			};
+			var nameEl = el.querySelector('.uq-name');
+			nameEl.textContent = name;
+			nameEl.title = name;
+			if (note) {
+				var n = document.createElement('span');
+				n.className = 'uq-note';
+				n.textContent = note;
+				nameEl.appendChild(n);
+			}
+			it.btnCancel.addEventListener('click', function() { cancel(it); });
+			it.btnRetry.addEventListener('click', function() { retry(it); });
+			list.appendChild(el);
+			items.push(it);
+			if (error) { it.permanent = true; setState(it, 'failed', error); }
+			else { setState(it, 'queued', 'Queued · ' + fmtBytes(it.size)); }
 		}
-		xhr.onload = function() {
-			if (xhr.status >= 200 && xhr.status < 300) { location.reload(); } 
-			else { uploadError('Upload failed (' + xhr.status + ')'); }
-		};
-		xhr.onerror = function() { uploadError('Connection failed.'); };
-		xhr.send(fd);
 
-		function uploadError(msg) {
-			progress.style.display = 'none';
-			label.textContent = 'Drop files or click to browse';
-			showToast(msg);
+		function setState(it, state, text) {
+			it.state = state;
+			it.el.className = 'uq-item is-' + state;
+			if (text !== undefined) it.status.textContent = text;
+			it.btnCancel.hidden = !(state === 'queued' || state === 'uploading');
+			it.btnRetry.hidden = !((state === 'failed' || state === 'cancelled') && !it.permanent);
+			var pct = state === 'done' ? 100 : (it.size ? (it.loaded / it.size) * 100 : 0);
+			it.bar.style.width = pct + '%';
 		}
-	}
+
+		function pump() {
+			var active = items.filter(isActive).length;
+			for (var i = 0; i < items.length && active < MAX_PARALLEL; i++) {
+				if (items[i].state === 'queued') { start(items[i]); active++; }
+			}
+		}
+
+		function start(it) {
+			var xhr = new XMLHttpRequest();
+			it.xhr = xhr;
+			it.loaded = 0;
+			it.started = Date.now();
+			setState(it, 'uploading', 'Starting…');
+
+			xhr.open('POST', uploadURL, true);
+			xhr.setRequestHeader('X-Upload', '1');
+			xhr.upload.onprogress = function(e) {
+				if (!e.lengthComputable || it.state !== 'uploading') return;
+				// e.total includes multipart framing; scale to the file's own size.
+				it.loaded = e.total ? Math.min(it.size, (e.loaded / e.total) * it.size) : 0;
+				if (e.loaded >= e.total) {
+					setState(it, 'finishing', 'Finishing…');
+				} else {
+					var elapsed = (Date.now() - it.started) / 1000;
+					var speed = elapsed > 0 ? it.loaded / elapsed : 0;
+					var text = Math.round((it.loaded / it.size) * 100) + '% · ' + fmtBytes(it.loaded) + ' / ' + fmtBytes(it.size);
+					if (speed > 0 && elapsed > 1) text += ' · ' + fmtBytes(speed) + '/s · ' + fmtDuration((it.size - it.loaded) / speed) + ' left';
+					setState(it, 'uploading', text);
+				}
+				render();
+			};
+			xhr.upload.onload = function() {
+				if (it.state !== 'uploading') return;
+				it.loaded = it.size;
+				setState(it, 'finishing', 'Finishing…');
+				render();
+			};
+			xhr.onload = function() {
+				if (xhr.status === 401) {
+					setState(it, 'failed', 'Failed: not logged in, refresh the page');
+				} else if (xhr.status === 204) {
+					it.loaded = it.size;
+					var secs = (Date.now() - it.started) / 1000;
+					setState(it, 'done', 'Done · ' + fmtBytes(it.size) + (secs >= 1 ? ' in ' + fmtDuration(secs) : ''));
+				} else {
+					var msg = (xhr.responseText || '').trim().slice(0, 200);
+					setState(it, 'failed', 'Failed: ' + (msg || 'HTTP ' + xhr.status));
+				}
+				finish();
+			};
+			xhr.onerror = function() { setState(it, 'failed', 'Failed: connection lost'); finish(); };
+			xhr.onabort = function() { setState(it, 'cancelled', 'Cancelled'); finish(); };
+
+			var fd = new FormData();
+			fd.append('files', it.file, it.file.name);
+			xhr.send(fd);
+		}
+
+		function finish() { pump(); render(); }
+
+		function cancel(it) {
+			if (it.state === 'queued') { setState(it, 'cancelled', 'Cancelled'); render(); }
+			else if (it.state === 'uploading' && it.xhr) { it.xhr.abort(); }
+		}
+		function retry(it) {
+			if (isPending(it) || it.permanent) return;
+			clearTimeout(reloadTimer);
+			it.loaded = 0;
+			setState(it, 'queued', 'Queued · ' + fmtBytes(it.size));
+			pump();
+			render();
+		}
+
+		function render() {
+			var total = 0, loaded = 0, speed = 0;
+			var n = { queued: 0, uploading: 0, finishing: 0, done: 0, failed: 0, cancelled: 0 };
+			items.forEach(function(it) {
+				n[it.state]++;
+				if (it.state === 'cancelled' || it.permanent) return;
+				total += it.size;
+				loaded += it.state === 'done' ? it.size : it.loaded;
+				if (it.state === 'uploading') {
+					var elapsed = (Date.now() - it.started) / 1000;
+					if (elapsed > 0) speed += it.loaded / elapsed;
+				}
+			});
+			var pending = n.queued + n.uploading + n.finishing;
+			var counted = items.length - n.cancelled;
+			var pct = total ? Math.floor((loaded / total) * 100) : (pending ? 0 : 100);
+
+			btnCancelAll.hidden = pending === 0;
+			btnRetryAll.hidden = pending > 0 || !items.some(function(it) { return it.state === 'failed' && !it.permanent; });
+			btnRefresh.hidden = pending > 0 || n.done === 0;
+			btnDismiss.hidden = pending > 0;
+
+			if (pending > 0) {
+				dropZone.classList.add('busy');
+				zoneBar.style.width = pct + '%';
+				title.textContent = 'Uploading…';
+				zoneLabel.textContent = 'Uploading… ' + pct + '% · ' + n.done + ' of ' + counted + ' done';
+				zoneHint.textContent = 'You can keep adding files';
+				var s = n.done + ' of ' + counted + ' done · ' + fmtBytes(loaded) + ' / ' + fmtBytes(total);
+				if (speed > 0) s += ' · ' + fmtBytes(speed) + '/s · ~' + fmtDuration((total - loaded) / speed) + ' left';
+				summary.textContent = s;
+				return;
+			}
+
+			dropZone.classList.remove('busy');
+			zoneBar.style.width = '0';
+			zoneLabel.textContent = IDLE_LABEL;
+			zoneHint.textContent = IDLE_HINT;
+			if (n.failed > 0) {
+				title.textContent = 'Some uploads failed';
+				summary.textContent = n.done + ' uploaded · ' + n.failed + ' failed' + (n.cancelled ? ' · ' + n.cancelled + ' cancelled' : '');
+				showToast(n.failed === 1 ? '1 upload failed' : n.failed + ' uploads failed');
+			} else if (n.done > 0) {
+				title.textContent = 'Upload complete';
+				summary.textContent = n.done + (n.done === 1 ? ' file' : ' files') + ' uploaded · refreshing…';
+				reloadTimer = setTimeout(function() { location.reload(); }, 800);
+			} else {
+				title.textContent = 'Uploads cancelled';
+				summary.textContent = '';
+			}
+		}
+
+		btnCancelAll.addEventListener('click', function() {
+			// Cancel queued items first: aborting an active one pumps the queue synchronously.
+			items.forEach(function(it) { if (it.state === 'queued') cancel(it); });
+			items.forEach(function(it) { if (it.state === 'uploading') cancel(it); });
+		});
+		btnRetryAll.addEventListener('click', function() {
+			items.forEach(function(it) { if (it.state === 'failed') retry(it); });
+		});
+		btnRefresh.addEventListener('click', function() { location.reload(); });
+		btnDismiss.addEventListener('click', function() {
+			if (items.some(function(it) { return it.state === 'done'; })) { location.reload(); return; }
+			items = [];
+			list.innerHTML = '';
+			panel.hidden = true;
+		});
+
+		fileInput.addEventListener('change', function() {
+			var files = Array.prototype.slice.call(fileInput.files);
+			fileInput.value = '';
+			addFiles(files, []);
+		});
+
+		// Page-wide drop target. A counter avoids flicker from dragleave firing on child elements.
+		var dragDepth = 0;
+		function hasFiles(e) {
+			var types = e.dataTransfer && e.dataTransfer.types;
+			if (!types) return false;
+			for (var i = 0; i < types.length; i++) { if (types[i] === 'Files') return true; }
+			return false;
+		}
+		function hideOverlay() { dragDepth = 0; overlay.classList.remove('show'); dropZone.classList.remove('dragover'); }
+		document.addEventListener('dragenter', function(e) {
+			if (!hasFiles(e)) return;
+			e.preventDefault();
+			dragDepth++;
+			overlay.classList.add('show');
+			dropZone.classList.add('dragover');
+		});
+		document.addEventListener('dragleave', function(e) {
+			if (!hasFiles(e)) return;
+			dragDepth = Math.max(0, dragDepth - 1);
+			if (dragDepth === 0) hideOverlay();
+		});
+		document.addEventListener('dragover', function(e) {
+			if (!hasFiles(e)) return;
+			e.preventDefault();
+			e.dataTransfer.dropEffect = 'copy';
+		});
+		document.addEventListener('drop', function(e) {
+			if (!hasFiles(e)) return;
+			e.preventDefault();
+			hideOverlay();
+			var dt = e.dataTransfer, files = [], folders = [];
+			if (dt.items && dt.items.length && dt.items[0].webkitGetAsEntry) {
+				for (var i = 0; i < dt.items.length; i++) {
+					var item = dt.items[i];
+					if (item.kind !== 'file') continue;
+					var entry = item.webkitGetAsEntry();
+					var f = item.getAsFile();
+					if (entry && entry.isDirectory) folders.push(entry.name);
+					else if (f) files.push(f);
+				}
+			} else {
+				files = Array.prototype.slice.call(dt.files);
+			}
+			addFiles(files, folders);
+		});
+		window.addEventListener('blur', hideOverlay);
+
+		window.addEventListener('beforeunload', function(e) {
+			if (items.some(isPending)) { e.preventDefault(); e.returnValue = ''; }
+		});
+	})();
 	</script>
 </body>
 </html>`
