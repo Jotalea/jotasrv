@@ -13,6 +13,7 @@ jotasrv [flags] [directory]
   -user admin    login username (or env JOTASRV_USER)
   -pass 1234     login password (or env JOTASRV_PASS)
   -public        serve ./public_html at /public/ (read-only, no login)
+  -public-dir D  serve directory D at /public/ instead (implies -public)
   -no-auth       disable login
   -version       print version and exit
 ```

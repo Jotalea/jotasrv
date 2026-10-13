@@ -43,6 +43,7 @@ func main() {
 	userFlag := flag.String("user", envOr("JOTASRV_USER", "admin"), "Login username (env JOTASRV_USER)")
 	passFlag := flag.String("pass", envOr("JOTASRV_PASS", "1234"), "Login password (env JOTASRV_PASS)")
 	publicFlag := flag.Bool("public", false, "Serve ./public_html (read-only, no login) at /public/")
+	publicDirFlag := flag.String("public-dir", "", "Serve this directory (read-only, no login) at /public/; implies -public")
 	noAuthFlag := flag.Bool("no-auth", false, "Disable login")
 	versionFlag := flag.Bool("version", false, "Print version and exit")
 	flag.Parse()
@@ -91,13 +92,17 @@ func main() {
 		handler = newAuthHandler(handler, *userFlag, *passFlag)
 	}
 	publicDir := ""
-	if *publicFlag {
-		publicDir, err = filepath.Abs("public_html")
+	if *publicFlag || *publicDirFlag != "" {
+		src := *publicDirFlag
+		if src == "" {
+			src = "public_html"
+		}
+		publicDir, err = filepath.Abs(src)
 		if err != nil {
-			log.Fatalf("Failed to resolve public_html: %v", err)
+			log.Fatalf("Failed to resolve public directory %s: %v", src, err)
 		}
 		if st, statErr := os.Stat(publicDir); statErr != nil || !st.IsDir() {
-			log.Fatalf("-public needs a public_html directory in the working directory (%s)", publicDir)
+			log.Fatalf("-public needs a directory to serve (%s); use -public-dir to set one", publicDir)
 		}
 		handler = newPublicHandler(handler, publicDir)
 	}
